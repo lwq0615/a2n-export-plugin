@@ -16,7 +16,6 @@ module.exports = function createA2nExportPlugin(options) {
       // 只处理目标目录下的 ts/tsx 文件
       if (/\.(ts|tsx)$/.test(id) && id.startsWith(apiDir)) {
         const format = template.replaceAll("#{baseUrl}", baseUrl).replaceAll("#{request}", request).replaceAll("#{filePath}", filePath.slice(0, filePath.lastIndexOf('.')))
-        console.log(format)
         return {
           code: format,
           map: null // 如果需要 source map，这里可以提供
