@@ -1,10 +1,10 @@
-import axios from 'axios'
+import request from '#{request}'
 
 export default function ApiExportProxy() {
   return new Proxy({}, {
     get(target, key) {
       return (...args) => {
-        return axios.post(`#{baseUrl}#{filePath}/${key}`, args).then(res => {
+        return request(`#{baseUrl}#{filePath}/${key}`, args).then(res => {
           return res.data
         })
       }

@@ -5,7 +5,7 @@ const template = fs.readFileSync(path.resolve(__dirname, './template.js'), 'utf-
 
 
 module.exports = function createA2nExportPlugin(options) {
-  const {baseUrl} = options
+  const {baseUrl, request} = options
   return {
     name: 'api-transformer',
     enforce: 'pre', // 在其他插件之前执行
@@ -15,8 +15,10 @@ module.exports = function createA2nExportPlugin(options) {
       const filePath = id.replace(apiDir, '')
       // 只处理目标目录下的 ts/tsx 文件
       if (/\.(ts|tsx)$/.test(id) && id.startsWith(apiDir)) {
+        const format = template.replaceAll("#{baseUrl}", baseUrl).replaceAll("#{request}", request).replaceAll("#{filePath}", filePath.slice(0, filePath.lastIndexOf('.')))
+        console.log(format)
         return {
-          code: template.replaceAll("#{baseUrl}", baseUrl).replaceAll("#{filePath}", filePath.slice(0, filePath.lastIndexOf('.'))),
+          code: format,
           map: null // 如果需要 source map，这里可以提供
         }
       }

@@ -23,6 +23,8 @@ export type A2nExportPluginOption = {
   path: string
   // 发起请求的url前缀
   baseUrl: string
+  // 请求函数文件路径
+  request: string
 }
 ```
 
@@ -44,7 +46,8 @@ export default defineConfig({
     vueDevTools(),
     createA2nExportPlugin({
       path: './api/src',
-      baseUrl: '/api-export'
+      baseUrl: '/api-export',
+      request: '@/utils/request'
     })
   ],
   resolve: {
@@ -89,3 +92,36 @@ api.getName(1, 2).then(res => {
   console.log(res)
 })
 ```
+
+> 以上的`api.getName(1, 2)`实际会产生如下请求
+> * url: /user/getName
+> * body: [1, 2]
+
+### 原理
+
+在以上的案例中，引入`api/src`文件夹内的ts或tsx文件时，会经过a2n-export-plugin插件处理，替换引入的文件文本为如下内容
+
+```js
+// 从request配置项路径中获取请求函数
+import request from '@/utils/request'
+
+export default function ApiExportProxy() {
+  return new Proxy({}, {
+    get(target, key) {
+      return (...args) => {
+        // baseUrl+文件相对于path的路径+调用的函数名称
+        return request(`/api-export/user/${key}`, args).then(res => {
+          return res.data
+        })
+      }
+    },
+    set() {
+      return false
+    }
+  })
+}
+```
+
+### 注意
+
+request配置的文件路径需要默认导出一个请求函数，函数参数1为请求url，参数2为参数列表
