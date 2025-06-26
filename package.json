@@ -1,0 +1,15 @@
+{
+  "name": "a2n-export-plugin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/api-transformer-plugin.cjs",
+  "types": "index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.7.0"
+}
