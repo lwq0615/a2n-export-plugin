@@ -36,14 +36,12 @@ import {fileURLToPath, URL} from 'node:url'
 
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import createA2nExportPlugin from "a2n-export-plugin";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
     createA2nExportPlugin({
       path: './api/src',
       baseUrl: '/api-export',
@@ -52,19 +50,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@api': fileURLToPath(new URL('./api/src', import.meta.url)),
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api-export': {
-        target: 'http://localhost:8080/', // 后台接口前缀
-        changeOrigin: true, // 是否允许跨域
-        secure: false, // 如果是https接口，需要配置这个参数
-        rewrite: (path) => path.replace(/^\/api-export/, ''),
-      },
     },
   },
 })
@@ -72,10 +58,10 @@ export default defineConfig({
 
 在根目录api文件夹下创建基于node的服务端程序（推荐使用孪生项目：[a2n][a2n-url]，关于ApiExport的能力请查看[a2n][api-export-url]文档），创建`src/user.ts`操作数据库
 ```ts
-import { ApiExport } from "a2n";
+import { ApiExport, ApiExportRequest } from "a2n";
 
 @ApiExport
-export default class User {
+export default class User extends ApiExportRequest {
   async getName(id: number, group: number) {
     return userService.findUser(id, group).name
   }
@@ -87,40 +73,22 @@ export default class User {
 import UserControl from '@api/user'
 
 const api = new UserControl()
+// 或者
+const api = UserControl.request()
 api.getName(1, 2).then(res => {
   // 拿到服务端class函数的返回值
   console.log(res)
 })
 ```
 
-> 以上的`api.getName(1, 2)`实际会产生如下请求
+> 以上的`api.getName(1, 2)`实际会被转发为如下请求
+> * request("/user/getName", [1, 2])
 > * url: /user/getName
 > * body: [1, 2]
 
 ### 原理
 
-在以上的案例中，引入`api/src`文件夹内的ts或tsx文件时，会经过a2n-export-plugin插件处理，替换引入的文件文本为如下内容
-
-```js
-// 从request配置项路径中获取请求函数
-import request from '@/utils/request'
-
-export default function ApiExportProxy() {
-  return new Proxy({}, {
-    get(target, key) {
-      return (...args) => {
-        // baseUrl+文件相对于path的路径+调用的函数名称
-        return request(`/api-export/user/${key}`, args).then(res => {
-          return res.data
-        })
-      }
-    },
-    set() {
-      return false
-    }
-  })
-}
-```
+在以上的案例中，引入`api/src`文件夹内的ts或tsx文件时，会经过a2n-export-plugin插件处理，替换引入的文件文本并加入请求转发逻辑
 
 ### 注意
 
