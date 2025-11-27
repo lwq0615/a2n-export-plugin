@@ -1,16 +1,29 @@
-import request from '#{request}'
+import request from '#{request}';
 
-export default function ApiExportProxy() {
-  return new Proxy({}, {
-    get(target, key) {
-      return (...args) => {
-        return request(`#{baseUrl}#{filePath}/${key}`, args).then(res => {
-          return res.data
-        })
-      }
-    },
-    set() {
-      return false
+let proxy = null;
+
+function ApiExportProxy() {
+  if (proxy) {
+    return proxy;
+  }
+  proxy = new Proxy(
+    {},
+    {
+      get(target, key) {
+        return (...args) => {
+          return request(`#{baseUrl}#{filePath}/${key}`, args).then((res) => {
+            return res.data;
+          });
+        };
+      },
+      set() {
+        return false;
+      },
     }
-  })
+  );
+  return proxy;
 }
+
+ApiExportProxy.request = ApiExportProxy;
+
+export default ApiExportProxy;
