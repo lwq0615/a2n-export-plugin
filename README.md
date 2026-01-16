@@ -72,8 +72,6 @@ export default class User extends ApiExportRequest {
 ```ts
 import UserControl from '@api/user'
 
-const api = new UserControl()
-// 或者
 const api = UserControl.request()
 api.getName(1, 2).then(res => {
   // 拿到服务端class函数的返回值
